@@ -26,15 +26,16 @@ class CLIOptionParser
     options[:ifinstate] = Hash.new
 
     opts = OptionParser.new do |opts|
-      opts.banner = "Usage: virtuoso-ensure-state [options]"
+      opts.banner = "Usage: virtuoso-ensure-state [required options] [options]"
+      opts.separator "Example: virtuoso-ensure-state -m development_vm --ifPoweredOff powerUp"
       opts.separator "Version: #{Version.to_s}"
 
       opts.separator ""
       opts.separator "Required options:"
 
       # Mandatory arguments
-      opts.on('-m', '--machines x,y,z', Array,
-              'Virtual Machine names or UUIDs this application should manage') do |machines|
+      opts.on('-m', '--machine machine',
+              'Virtual Machine name or UUID this application should manage') do |machines|
         options.config_file << config
       end
 
@@ -44,7 +45,7 @@ class CLIOptionParser
       # Optional arguments
       STATES.each do |state|
 
-        opts.on("--if#{state} [ACTION]", ACTIONS,
+        opts.on("--if#{state} ACTION", ACTIONS,
                 "Action to take if a given virtual machine is in state #{state}") do |action|
           options[:ifinstate][state] = action
         end
@@ -53,6 +54,18 @@ class CLIOptionParser
 
       opts.separator ""
       opts.separator "Common options:"
+
+      opts.on('-s', "--slient", "Run silently (no output)") do
+        options[:silent] = true
+      end
+
+      opts.on('-v', "--[no-]verbose", "Run verbosely") do |v|
+        options[:verbose] = v
+      end
+
+      opts.on('-d', "--debug", "Run with debugging messages and behavior turned on") do
+        options[:debug] = true
+      end
 
       # No argument, shows at tail. This will print an options summary.
       opts.on_tail('-h', '--help', 'Show this message') do

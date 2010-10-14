@@ -21,9 +21,8 @@ class CLI
   # Starts a virtual machine convergence run using the ensure-state system guided by the run_flags passed into the initializer.
   def run!
     cli_parser = parse_run_flags(@raw_run_flags)
-    unless cli_parser.messages.empty?
-      puts cli_parser.messages.join("\n")
-    end
+    # display any informational messages emitted by the parser
+    puts cli_parser.messages.join("\n")
   end
 
   private
