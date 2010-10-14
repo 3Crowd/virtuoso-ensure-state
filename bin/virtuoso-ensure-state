@@ -5,3 +5,6 @@ library_path = File.join(File.dirname(__FILE__),'..','lib')
 $:.push(library_path) unless $:.include?(library_path)
 
 require 'ensure-state'
+require 'ensure-state/cli'
+
+Virtuoso::EnsureState::CLI.run!(ARGV)
