@@ -22,7 +22,9 @@ class CLI
   def run!
     cli_parser = parse_run_flags(@raw_run_flags)
     # display any informational messages emitted by the parser
-    puts cli_parser.messages.join("\n")
+    puts cli_parser.messages.join("\n") unless cli_parser.messages.empty?
+    # exit if suggested by parser
+    exit(cli_parser.suggested_exit_return_code) if cli_parser.exit_after_message_display_suggested
   end
 
   private
