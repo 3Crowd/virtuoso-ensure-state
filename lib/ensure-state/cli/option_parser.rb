@@ -5,8 +5,9 @@ module Virtuoso
 module EnsureState
 class CLIOptionParser
 
-  STATES = %w[PoweredOff Saved Teleported Aborted Running Paused Stuck Teleporting LiveSnapshotting Starting Stopping Saving Restoring TeleportingPausedVM TeleportingIn DeletingSnapshotOnline DeletingSnapshotPaused RestoringSnapshot DeletingSnapshot SettingUp]
-  ACTIONS = %w[powerUp powerUpPaused reset pause resume powerButton sleepButton saveState]
+  STATES = [:powered_off, :running, :saved, :paused]
+  ACTIONS = [:start, :pause, :stop, :shutdown, :resume]
+  BACKENDS = [:virtualbox]
 
   attr_reader :options
   attr_reader :messages
@@ -35,31 +36,41 @@ class CLIOptionParser
 
     opts = OptionParser.new do |opts|
       opts.banner = "Usage: virtuoso-ensure-state [required options] [options]"
-      opts.separator "Example: virtuoso-ensure-state -m development_vm --ifPoweredOff powerUp"
+      opts.separator "Example: virtuoso-ensure-state -b virtualbox -m development_vm --ifPoweredOff powerUp"
       opts.separator "Version: #{Version.to_s}"
 
       opts.separator ""
       opts.separator "Required options:"
 
       # Mandatory arguments
-      opts.on('-m', '--machine machine',
+      opts.on('-b', '--backend BACKEND',
+        "Backend to use") do |backend|
+        options[:backend] = backend
+      end
+      
+      opts.on('-m', '--machine MACHINE',
               'Virtual Machine name or UUID this application should manage') do |machine|
         options[:machine] = machine
       end
-
+      
+      opts.separator ""
+      opts.separator "available BACKENDs: #{BACKENDS.join(', ')}"
+      
       opts.separator ""
       opts.separator "Specific options:"
 
       # Optional arguments
       STATES.each do |state|
 
-        opts.on("--if#{state} ACTION", ACTIONS,
+        opts.on("--if#{state} ACTION",
                 "Action to take if a given virtual machine is in state #{state}") do |action|
           options[:ifinstate][state] = action
         end
 
       end
 
+      opts.separator ""
+      opts.separator "Available ACTIONs: #{ACTIONS.join(', ')}"
       opts.separator ""
       opts.separator "Common options:"
 
@@ -97,9 +108,21 @@ class CLIOptionParser
 
   def ensure_required_switches_passed!
     return if @options[:help_requested]
-
-    if @options[:machine].nil? then
+    
+    if @options[:backend].nil? || @options[:machine].nil? then
       @messages << 'Error: Required option not set. Please ensure all required options have been set. See usage by using -h flag.'
+      suggest_exit_after_message_display
+      suggest_exit_return_code(1)
+    end
+    
+    unless @options[:backend] && BACKENDS.member?(@options[:backend])
+      @messages << 'Error: Invalid backend specified. Please ensure backend exists in available backend list. See available backends using -h flag.'
+      suggest_exit_after_message_display
+      suggest_exit_return_code(1)
+    end
+    
+    unless @options[:ifinstate] && @options[:ifinstate].values.all?{|value|ACTIONS.member?(value)}
+      @messages << 'Error: Invalid action specified for :ifinstate. Ensure all actions are set appropriately. See usage and available actions by using the -h flag.'
       suggest_exit_after_message_display
       suggest_exit_return_code(1)
     end

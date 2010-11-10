@@ -53,6 +53,13 @@ class VM
     end
   end
 
+  # The state of the vm.
+  #
+  # @return [Symbol] The state of the virtual machine
+  def state
+    state = @backend.vm_state(@vm)
+  end
+
   # The unique identifier for the VM. Note: The score of the uniqueness is guaranteed by
   # the backend. It may not be universally unique
   #
