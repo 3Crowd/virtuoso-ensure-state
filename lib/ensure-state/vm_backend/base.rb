@@ -1,4 +1,4 @@
-require 'ensure-state/vm_backend_errors/state_transition_error'
+require 'ensure-state/errors/vm_backend_errors/state_transition_error'
 
 module Virtuoso
 module EnsureState
@@ -23,6 +23,9 @@ module VMBackend
       end
 
     end
+    
+    VALID_ACTION_TO_STATE_APPLICATION_MAP = {
+    }
 
     # Find a virtual machine on the backend
     #

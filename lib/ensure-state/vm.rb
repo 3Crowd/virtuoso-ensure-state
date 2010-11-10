@@ -59,6 +59,14 @@ class VM
   def state
     state = @backend.vm_state(@vm)
   end
+  
+  # Set the state of the vm
+  #
+  # @raise [Errors::InvalidStateError] Error raised if the specified state is not recognized by the backend, or if the current
+  #   state of the virtual machine does not allow for setting the specified state
+  def state= state
+    @backend.set_vm_state!(@vm, state)
+  end
 
   # The unique identifier for the VM. Note: The score of the uniqueness is guaranteed by
   # the backend. It may not be universally unique

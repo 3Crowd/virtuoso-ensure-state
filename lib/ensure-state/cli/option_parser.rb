@@ -45,7 +45,7 @@ class CLIOptionParser
       # Mandatory arguments
       opts.on('-b', '--backend BACKEND',
         "Backend to use") do |backend|
-        options[:backend] = backend
+        options[:backend] = backend.to_sym
       end
       
       opts.on('-m', '--machine MACHINE',
@@ -64,7 +64,7 @@ class CLIOptionParser
 
         opts.on("--if#{state} ACTION",
                 "Action to take if a given virtual machine is in state #{state}") do |action|
-          options[:ifinstate][state] = action
+          options[:ifinstate][state] = action.to_sym
         end
 
       end
