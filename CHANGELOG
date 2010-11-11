@@ -1,3 +1,11 @@
+0.0.5.beta
+====
+* Sync code versioning schema
+
+0.0.4.beta
+====
+* Up version to fix back library push
+
 0.0.3.beta
 ====
 * Fix issue with require paths in gemspec

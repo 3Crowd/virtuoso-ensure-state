@@ -4,7 +4,7 @@ class Version
 
   MAJOR = '0'
   MINOR = '0'
-  POINT = '1'
+  POINT = '5'
   RELEASE_MARKER = 'beta'
 
   def self.to_s

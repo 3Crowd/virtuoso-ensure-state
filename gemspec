@@ -1,6 +1,8 @@
+require 'lib/ensure-state/version'
+
 Gem::Specification.new do |s|
   s.name	= "virtuoso-ensure-state"
-  s.version	= "0.0.4.beta"
+  s.version	= Virtuoso::EnsureState::Version
   s.platform	= Gem::Platform::RUBY
   s.authors	= ["3Crowd Technologies, Inc.", "Justin Lynn"]
   s.email	= ["eng@3crowd.com"]
