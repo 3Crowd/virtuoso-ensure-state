@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name	= "virtuoso-ensure-state"
-  s.version	= "0.0.2.beta"
+  s.version	= "0.0.3.beta"
   s.platform	= Gem::Platform::RUBY
   s.authors	= ["3Crowd Technologies, Inc.", "Justin Lynn"]
   s.email	= ["eng@3crowd.com"]
@@ -13,5 +13,5 @@ Gem::Specification.new do |s|
 
   s.files	= Dir.glob("{bin,lib}/**/*") + %w(LICENSE README CHANGELOG)
   s.executables	= ['virtuoso-ensure-state']
-  s.require_path = 'lib'
+  s.require_paths = 'lib'
 end
