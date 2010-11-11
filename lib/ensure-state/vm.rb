@@ -12,9 +12,9 @@ class VM
   #   usage of the abstract implementation is not recommended
   # @return [VM, false] The virtual machine instance, or false if the instance is
   #   is not found
-  def self.find name_or_uuid, backend
+  def self.find name_or_uuid, backend, logger = Logger.new(STDOUT)
     begin
-      self.find! name_or_uuid, backend
+      self.find! name_or_uuid, backend, logger
     rescue Errors::VMNotFoundError => e
       false
     end
@@ -28,13 +28,18 @@ class VM
   #   usage of the abstract implementation is not recommended
   # @return [VM, false] The virtual machine instance
   # @raise [VMNotFoundError] Exception raised if virtual machine is not found
-  def self.find! name_or_uuid, backend
-    self.new name_or_uuid, backend
+  def self.find! name_or_uuid, backend, logger = Logger.new(STDOUT)
+    self.new name_or_uuid, backend, logger
   end
 
-  attr_reader :vm_name, :backend
+  attr_accessor :display_mode
+  attr_reader :vm_name, :backend, :logger
 
-  def initialize name_or_uuid, backend
+  def initialize name_or_uuid, backend, logger = Logger.new(STDOUT)
+    @logger = logger.dup
+    @logger.progname = self.class.name
+
+    @display_mode = nil
     @vm_name = name_or_uuid
     @backend = backend
     verify_backend_is_a_valid_backend @backend
@@ -65,7 +70,7 @@ class VM
   # @raise [Errors::InvalidStateError] Error raised if the specified state is not recognized by the backend, or if the current
   #   state of the virtual machine does not allow for setting the specified state
   def state= state
-    @backend.set_vm_state!(@vm, state)
+    @backend.vm_set_state!(@vm, state, { :mode => display_mode })
   end
 
   # The unique identifier for the VM. Note: The score of the uniqueness is guaranteed by
@@ -78,15 +83,17 @@ class VM
   
   private
   
-  def self.verify_backend_is_a_valid_backend backend
+  def verify_backend_is_a_valid_backend backend
+    logger.debug("Verifying backend type")
     backend.kind_of? VMBackend::Base
   end
   
-  def self.retrieve_backend_reference_to_named_vm backend, named_vm
-    vm = backend.find named_vm
-    unless vm
-      raise VMNotFoundError
-    end
+  def retrieve_backend_reference_to_named_vm backend, named_vm
+    logger.debug("Retrieving backend reference to named vm. Backend: #{backend}. Named VM: #{named_vm}")
+    vm = backend.vm_find named_vm
+    raise Errors::VMNotFoundError if vm.nil?
+    logger.debug("Successfully retrieved backend reference to named vm. Backend Reference Class: #{vm.class.name}")
+    vm
   end
 
 end

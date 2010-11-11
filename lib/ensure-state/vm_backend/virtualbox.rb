@@ -1,5 +1,6 @@
 require 'ensure-state/errors/vm_backend_errors/backend_unavailable_error'
 require 'ensure-state/errors/vm_backend_errors/invalid_state_error'
+require 'ensure-state/errors/vm_backend_errors/vm_not_found_error'
 
 require 'ensure-state/vm_backend/base'
 
@@ -21,13 +22,25 @@ module VMBackend
       :resume => [:paused]
     }
     
-    def initialize
-      @backend = VirtualBox
+    VM_BACKEND_SETTLE_TIME = 0.5 #seconds
+    
+    attr_reader :logger
+    
+    def initialize(logger = Logger.new(STDOUT))
+      @logger = logger.dup
+      @logger.progname = self.class.name
+      
+      logger.debug("Initializing VirtualBox Backend")
+      
+      @backend = ::VirtualBox
       ensure_valid_backend_version @backend
     end
 
     def vm_find name_or_uuid
-      @backend.find(name_or_uuid)
+      logger.debug("Finding VM (#{name_or_uuid})")
+      vm = @backend::VM.find(name_or_uuid)
+      logger.debug("Found VM (#{name_or_uuid})") if vm
+      vm
     end
     
     def vm_name virtual_machine
@@ -42,21 +55,39 @@ module VMBackend
       virtual_machine.state
     end
     
-    def vm_set_state! virtual_machine, state_to_set, options
+    def vm_set_state! virtual_machine, state_to_set, options = {}
       ensure_transition_action_valid!(virtual_machine.state, state_to_set)
+      options[:mode] = :gui if state_to_set == :start && options[:mode].nil?
       state_set_successfully = case state_to_set
         when :start then
-          virtual_machine.start(options)
+          logger.debug("Backend starting VM (#{virtual_machine.uuid}/#{virtual_machine.name})")
+          virtual_machine.start(options[:mode])
         when :pause then
+          logger.debug("Backend pausing VM (#{virtual_machine.uuid}/#{virtual_machine.name})")
           virtual_machine.pause
+          #FIXME: evil hack, this method doesn't seem to block until completed
+          sleep(VM_BACKEND_SETTLE_TIME)
+          virtual_machine.paused?
         when :saved_state then
+          logger.debug("Backend saving state of VM (#{virtual_machine.uuid}/#{virtual_machine.name})")
           virtual_machine.save_state
         when :stop then
+          logger.debug("Backend stopping VM (#{virtual_machine.uuid}/#{virtual_machine.name})")
           virtual_machine.stop
+          #FIXME: evil hack, this method doesn't seem to block until completed
+          sleep(VM_BACKEND_SETTLE_TIME)
+          virtual_machine.powered_off?
         when :shutdown then
+          logger.debug("Backend shutting down VM (#{virtual_machine.uuid}/#{virtual_machine.name})")
           virtual_machine.shutdown
+          #FIXME: this command should not fail, but the guest operating system won't neccessarily shut down immediately. this is a safe shutdown
+          true
         when :resume then
+          logger.debug("Backend resuming VM (#{virtual_machine.uuid}/#{virtual_machine.name})")
           virtual_machine.resume
+          #FIXME: evil hack, this method doesn't seem to block until completed
+          sleep(VM_BACKEND_SETTLE_TIME)
+          virtual_machine.running?
       end
       raise Errors::StateTransitionError, "Error transitioning VM to state #{state_to_set}. Virtual Machine backend thinks machine is now in state: #{virtual_machine.state}" unless state_set_successfully
     end
@@ -74,9 +105,10 @@ module VMBackend
     end
     
     def ensure_valid_backend_version backend
-      if backend.version.nil?
-        raise Errors::BackendUnavailableError
-      end
+      version = backend.version
+      logger.debug("VirtualBox backend version: #{version}")
+      raise Errors::BackendUnavailableError, "Backend could not be loaded" if version.nil?
+      true
     end
     
   end

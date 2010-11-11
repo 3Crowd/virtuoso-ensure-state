@@ -74,7 +74,11 @@ class CLIOptionParser
       opts.separator ""
       opts.separator "Common options:"
 
-      opts.on('-s', "--slient", "Run silently (no output)") do
+      opts.on('--no-gui', "Attempt to run virtual machines in no-gui mode (dependent on backend)") do
+        options[:nogui] = true
+      end
+
+      opts.on('-s', "--silent", "Run silently (no output)") do
         options[:silent] = true
       end
 
