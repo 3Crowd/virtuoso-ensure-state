@@ -13,5 +13,4 @@ Gem::Specification.new do |s|
 
   s.files	= Dir.glob("{bin,lib}/**/*") + %w(LICENSE README CHANGELOG)
   s.executables	= ['virtuoso-ensure-state']
-  s.require_paths = ['lib']
 end
