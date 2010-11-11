@@ -1,2 +1,12 @@
 README for Virtuoso-ensure-state
 =============================
+Virtuoso-ensure-state is a program which converges virtual machines into a certain state. Essentially,
+it's an easy way to specify a state machine to ensure that your virtual machine remain in a state you
+control.
+
+Example
+=======
+./virtuoso-ensure-state -b virtualbox -m myvirtualmachine --ifpowered_off start --ifpaused resume --no-gui --silent
+
+would silently start the virtualbox based virtual machine if it were powered off and would resume it if it were paused, and would
+attempt to start it in the background in a non-gui mode.
